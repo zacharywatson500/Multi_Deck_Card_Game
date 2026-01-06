@@ -65,14 +65,17 @@ class Deck:
         
         return drawn_cards
     
-    def add_to_discard(self, cards: List[Card]) -> None:
+    def add_to_discard(self, cards) -> None:
         """
         Add cards to the discard pile.
         
         Args:
-            cards (List[Card]): Cards to add to discard pile.
+            cards: Either a single Card or List[Card] to add to discard pile.
         """
-        self.discard_pile.extend(cards)
+        if isinstance(cards, list):
+            self.discard_pile.extend(cards)
+        else:
+            self.discard_pile.append(cards)
     
     def reset(self) -> None:
         """

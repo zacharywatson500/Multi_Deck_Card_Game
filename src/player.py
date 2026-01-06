@@ -45,23 +45,23 @@ class Player:
         self.hand.extend(drawn_cards)
         return drawn_cards
     
-    def play_card(self, card_index: int, discard_to_deck: Deck) -> Optional[Card]:
+    def play_card(self, index: int, target_deck: Deck) -> Optional[Card]:
         """
         Play a card from hand and move it to the discard pile.
         
         Args:
-            card_index (int): Index of the card in hand to play.
-            discard_to_deck (Deck): The deck where the card will be discarded.
+            index (int): Index of the card in hand to play.
+            target_deck (Deck): The deck where the card will be discarded.
             
         Returns:
             Optional[Card]: The played card, or None if index is invalid.
             
         Raises:
-            IndexError: If card_index is out of range.
+            IndexError: If index is out of range.
         """
-        if 0 <= card_index < len(self.hand):
-            card = self.hand.pop(card_index)
-            discard_to_deck.add_to_discard([card])
+        if 0 <= index < len(self.hand):
+            card = self.hand.pop(index)
+            target_deck.add_to_discard(card)
             return card
         return None
     
