@@ -7,62 +7,45 @@ A single-player virtual card game centered around a **Three-Deck System**. The g
 
 ## 2. Technical Architecture
 
-### **Card System** (`card.py`)
-Defines the base unit of the game.
-* **Attributes**: Name, Type, Cost, and Description/Effect.
-* **Status**: **Complete**
+### **Data & Logic Foundation** (`game_state.py`)
+This file houses the "Brain" of the game, utilizing a strict separation between data storage and rule execution.
 
-### **Deck System** (`deck.py`)
-Manages the lifecycle of card groups.
-* **Attributes**: 
-    * `cards`: The current draw pile (List).
-    * `discard_pile`: Cards waiting to be recycled (List).
-    * `original_cards`: A master list for game resets.
-* **Key Mechanics**:
-    * **Automatic Cycling**: If a draw is empty, moves discard to draw and shuffles.
-    * **add_to_discard(cards)**: Appends Card or List[Card] to the discard pile.
-* **Status**: **Complete**
+* **GameState (The Model)**:
+    * **Role**: A pure data container holding the current snapshot of the game.
+    * **Attributes**: 
+        * `decks`: A dictionary containing three `Deck` instances (Main, Resource, Encounter).
+        * `player`: The active `Player` instance.
+        * `turn_number`, `energy`, and `is_game_over` (Variable State).
+* **GameController (The Referee)**:
+    * **Role**: Executes game rules and modifies the `GameState`.
+    * **Core Responsibilities**:
+        * `start_turn()`: Increments turn, resets energy, and draws initial cards.
+        * **Validation**: Ensures actions (like playing a card) are legal before modifying state.
+        * **Effect Resolution**: Interprets card descriptions to update player stats or deck states.
 
-### **Player System** (`player.py`)
-The primary agent controlled by the user.
-* **Attributes**: `hand`, `resource_level`, `life_total`.
-* **Behaviors**: `draw_from(deck, count)`, `play_card(index, target_deck)`.
-* **Status**: **Complete**
-
-### **Game Controller / State** (`main.py`)
-The "Brain" that centralizes all game data and orchestrates interactions.
-* **State Management**:
-    * **Physical State**: Owns the 3 `Deck` instances (Main, Resource, Encounter) and the `Player` instance.
-    * **Variable State**: Tracks `turn_number`, `current_energy`, and `is_game_over`.
-    * **Phase State**: Tracks the current sub-turn phase (Start, Action, End).
-* **Core Responsibilities**:
-    * **Input Handling**: Translates user terminal commands into game actions.
-    * **Effect Resolution**: Interprets card descriptions (e.g., if a card says "+2 Energy", the Controller updates the Player's `resource_level`).
-    * **Win/Loss Validation**: Checks life totals and deck counts after every action.
-* **Status**: **In Progress** (Next Implementation Goal)
+### **Supporting Systems**
+* **Card System** (`card.py`): Defines attributes for Name, Type, Cost, and Effect. **(Complete)**
+* **Deck System** (`deck.py`): Handles draw/discard piles and automatic shuffling/cycling. **(Complete)**
+* **Player System** (`player.py`): Manages the player's `hand`, `life_total`, and `resource_level`. **(Complete)**
 
 ---
 
-## 3. High-Level Game Flow (The Turn Loop)
+## 3. High-Level Game Flow (The Alpha Loop)
 
-1. **Initialization**: 
-    * Create `Main`, `Resource`, and `Encounter` decks.
-    * Instantiate the `Player`.
-2. **Turn Start Phase**: 
-    * Increment `turn_number`.
-    * Reset `resource_level`.
-    * Player draws a fixed amount from designated decks.
-3. **Action Phase (Looping)**: 
-    * Display Hand and Stats.
-    * Accept user input (Play index or End Turn).
-    * Resolve Card effects and move played cards to appropriate discard piles.
-4. **End Phase**: 
-    * Resolve "End of Turn" effects.
-    * Check for Win/Loss conditions.
-5. **Cycling**: Individual decks shuffle their own discard piles back into their draw piles automatically when empty.
+The **Heartbeat** of the game is located in `main.py`, which acts as the User Interface (UI) layer.
+
+1.  **Initialization**: 
+    * Generate test cards and populate the `Main`, `Resource`, and `Encounter` decks.
+    * Instantiate `GameState` and `GameController`.
+2.  **The Interactive Loop (`while not is_game_over`)**:
+    * **Display**: Print the current `GameState` (Hand, Health, Energy, and Deck sizes).
+    * **Input**: Capture user commands (e.g., `d` for draw, `p` for play, `q` for quit).
+    * **Action**: Pass valid commands to the `GameController` to update the `GameState`.
+3.  **Turn Transition**: 
+    * The loop resets for the next player action until an "End Turn" or "Quit" command is received.
 
 ---
 
 ## 4. Roadmap / Future Development
-* **Logic Rules Engine**: Moving card effect logic out of `main.py` and into a dedicated `rules.py`.
-* **UI/GUI Layer**: Transitioning from terminal print statements to a visual window (Pygame).
+* **Visual UI**: Moving from terminal print statements to a Pygame-based window.
+* **Rules Engine**: Moving complex card logic into a dedicated `rules.py` for easier balancing.

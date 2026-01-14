@@ -1,65 +1,229 @@
 """Main entry point for the three-deck virtual card game."""
 
+import os
+import sys
+from typing import Tuple
+
 from card import Card
 from deck import Deck
 from player import Player
+from game_state import GameState, GameController
 
 
-def main():
-    """Main game function."""
-    print("Three-Deck Virtual Card Game")
-    print("=" * 40)
+def setup_game() -> Tuple[GameState, GameController]:
+    """
+    Dummy Card Factory helper function that sets up the game.
     
-    # Create some example cards
-    cards = [
-        Card("Fireball", "Spell Deck", 5, "Deal 5 damage to any target."),
-        Card("Heal", "Spell Deck", 3, "Restore 3 health."),
-        Card("Lightning Bolt", "Spell Deck", 7, "Deal 7 damage to any target."),
-        Card("Shield", "Defense Deck", 4, "Block 4 damage."),
-        Card("Sword Strike", "Attack Deck", 6, "Deal 6 damage."),
+    Returns:
+        Tuple[GameState, GameController]: The initialized game state and controller.
+    """
+    # Instantiate a Player
+    player = Player("Hero", life_total=20, resource_level=0)
+    
+    # Generate three distinct lists of Card objects
+    # Attack cards for "Main" deck
+    main_cards = [
+        Card("Fireball", "Main", 3, "Deal 3 damage to enemy"),
+        Card("Sword Strike", "Main", 2, "Deal 2 damage to enemy"),
+        Card("Lightning Bolt", "Main", 4, "Deal 4 damage to enemy"),
+        Card("Ice Shard", "Main", 2, "Deal 2 damage to enemy"),
+        Card("Arrow Shot", "Main", 1, "Deal 1 damage to enemy")
     ]
     
-    # Create and shuffle deck
-    deck = Deck(cards)
-    print(f"Created deck: {deck}")
+    # Energy cards for "Resource" deck
+    resource_cards = [
+        Card("Energy Crystal", "Resource", 1, "Gain 1 energy"),
+        Card("Mana Potion", "Resource", 2, "Gain 2 energy"),
+        Card("Power Gem", "Resource", 3, "Gain 3 energy"),
+        Card("Focus Charm", "Resource", 1, "Gain 1 energy"),
+        Card("Meditation", "Resource", 2, "Gain 2 energy")
+    ]
     
-    deck.shuffle()
-    print(f"After shuffle: {deck}")
+    # Enemy cards for "Encounter" deck
+    enemy_cards = [
+        Card("Goblin", "Encounter", 2, "Enemy with 2 health"),
+        Card("Orc", "Encounter", 4, "Enemy with 4 health"),
+        Card("Dragon", "Encounter", 8, "Enemy with 8 health"),
+        Card("Skeleton", "Encounter", 1, "Enemy with 1 health"),
+        Card("Troll", "Encounter", 6, "Enemy with 6 health")
+    ]
     
-    # Create players
-    player1 = Player("Alice")
-    player2 = Player("Bob")
+    # Create three Deck instances using these cards
+    main_deck = Deck(main_cards)
+    resource_deck = Deck(resource_cards)
+    encounter_deck = Deck(enemy_cards)
     
-    print(f"Created players: {player1}, {player2}")
+    # Shuffle all decks
+    main_deck.shuffle()
+    resource_deck.shuffle()
+    encounter_deck.shuffle()
     
-    # Draw some cards for demonstration
-    drawn_cards = deck.draw(3)
-    player1.hand.extend(drawn_cards)
+    # Initialize a GameState with the decks and player
+    decks = {
+        "Main": main_deck,
+        "Resource": resource_deck,
+        "Encounter": encounter_deck
+    }
+    game_state = GameState(decks, player)
     
-    print(f"{player1.name} drew {len(drawn_cards)} cards:")
-    for card in drawn_cards:
-        print(f"  {card}")
+    # Create a GameController with that state
+    game_controller = GameController(game_state)
     
-    print(f"Deck state: {deck}")
+    return game_state, game_controller
+
+
+def clear_screen() -> None:
+    """Clear the terminal screen."""
+    os.system('cls' if os.name == 'nt' else 'clear')
+
+
+def display_ui(state: GameState) -> None:
+    """
+    Display the current game UI showing turn, player stats, and deck info.
     
-    # Create a discard deck for the player
-    player1_discard = Deck()
-    print(f"\n{player1.name}'s discard deck: {player1_discard}")
+    Args:
+        state (GameState): The current game state.
+    """
+    print("=" * 50)
+    print(f"TURN {state.turn_number}")
+    print("=" * 50)
+    print(f"Player Health: {state.player.life_total}")
+    print(f"Energy: {state.energy}")
+    print("\nDeck Status:")
+    print(f"  Main Deck: {len(state.decks['Main'])} cards remaining")
+    print(f"  Resource Deck: {len(state.decks['Resource'])} cards remaining")
+    print(f"  Encounter Deck: {len(state.decks['Encounter'])} cards remaining")
+    print("=" * 50)
+
+
+def display_hand(player: Player) -> None:
+    """
+    Display the cards currently in the player's hand.
     
-    # Demonstrate playing a card
-    if player1.hand:
-        print(f"\n{player1.name}'s current hand:")
-        for i, card in enumerate(player1.hand):
-            print(f"  [{i}] {card}")
+    Args:
+        player (Player): The player whose hand to display.
+    """
+    print("\nYOUR HAND:")
+    if not player.hand:
+        print("  (No cards in hand)")
+    else:
+        for i, card in enumerate(player.hand):
+            print(f"  [{i}] {card.name} (Cost: {card.current_value}) - {card.description}")
+    print()
+
+
+def handle_input(state: GameState, controller: GameController) -> None:
+    """
+    Handle user input for the game.
+    
+    Args:
+        state (GameState): The current game state.
+        controller (GameController): The game controller.
+    """
+    while True:
+        try:
+            user_input = input("Enter command (d=draw, p [index]=play, q=quit): ").strip().lower()
+            
+            if not user_input:
+                continue
+                
+            if user_input == 'd':
+                # Start turn: draw cards and reset energy
+                controller.start_turn()
+                print("Cards drawn! Energy reset to 3.")
+                break
+                
+            elif user_input == 'q':
+                # Quit game
+                state.is_game_over = True
+                print("Game ended.")
+                break
+                
+            elif user_input.startswith('p '):
+                # Play card
+                try:
+                    parts = user_input.split()
+                    if len(parts) != 2:
+                        print("Usage: p [index]")
+                        continue
+                        
+                    card_index = int(parts[1])
+                    
+                    if card_index < 0 or card_index >= len(state.player.hand):
+                        print(f"Invalid card index. Must be between 0 and {len(state.player.hand) - 1}")
+                        continue
+                    
+                    card = state.player.hand[card_index]
+                    
+                    # Check if player has enough energy
+                    if state.energy < card.current_value:
+                        print(f"Not enough energy! Need {card.current_value}, have {state.energy}")
+                        continue
+                    
+                    # Play the card
+                    played_card = state.player.play_card(card_index, state.decks["Main"])
+                    if played_card:
+                        state.energy -= played_card.current_value
+                        print(f"Played {played_card.name}! Energy remaining: {state.energy}")
+                        
+                        # Simple damage logic for attack cards
+                        if played_card.deck_type == "Main":
+                            print(f"Dealt {played_card.current_value} damage to enemy!")
+                        elif played_card.deck_type == "Resource":
+                            print(f"Gained {played_card.current_value} energy!")
+                            # For resource cards, add the energy back (they represent energy gain)
+                            state.energy += played_card.current_value
+                    break
+                    
+                except ValueError:
+                    print("Invalid card index. Please enter a number.")
+                    continue
+                    
+            else:
+                print("Unknown command. Use 'd', 'p [index]', or 'q'.")
+                continue
+                
+        except KeyboardInterrupt:
+            print("\nGame interrupted.")
+            state.is_game_over = True
+            break
+        except Exception as e:
+            print(f"Error: {e}")
+            continue
+
+
+def main() -> None:
+    """Main game loop."""
+    # Set up the game
+    state, controller = setup_game()
+    
+    print("Welcome to the Three-Deck Card Game!")
+    print("Commands:")
+    print("  d     - Draw cards and start new turn")
+    print("  p [n] - Play card at index n from hand")
+    print("  q     - Quit game")
+    print("\nPress Enter to start...")
+    input()
+    
+    # Main game loop
+    while not state.is_game_over:
+        # Clear screen and display UI
+        clear_screen()
+        display_ui(state)
+        display_hand(state.player)
         
-        # Play the first card (index 0)
-        played_card = player1.play_card(0, player1_discard)
-        print(f"\n{player1.name} played: {played_card}")
-        print(f"{player1.name}'s hand after playing: {player1}")
-        print(f"{player1.name}'s discard deck after play: {player1_discard}")
-        print(f"Cards in discard pile:")
-        for card in player1_discard.discard_pile:
-            print(f"  {card}")
+        # Handle user input
+        handle_input(state, controller)
+        
+        # Check for game over conditions
+        if state.player.life_total <= 0:
+            state.is_game_over = True
+            print("Game Over! You have been defeated.")
+        elif len(state.decks["Main"]) == 0 and len(state.decks["Resource"]) == 0:
+            state.is_game_over = True
+            print("Game Over! All decks are empty.")
+    
+    print("\nThanks for playing!")
 
 
 if __name__ == "__main__":
