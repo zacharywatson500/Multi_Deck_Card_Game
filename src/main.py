@@ -80,7 +80,7 @@ def clear_screen() -> None:
 
 def display_ui(state: GameState) -> None:
     """
-    Display the current game UI showing turn, player stats, and deck info.
+    Display the current game UI showing turn, player stats, deck info, and recent events.
     
     Args:
         state (GameState): The current game state.
@@ -94,6 +94,13 @@ def display_ui(state: GameState) -> None:
     print(f"  Main Deck: {len(state.decks['Main'])} cards remaining")
     print(f"  Resource Deck: {len(state.decks['Resource'])} cards remaining")
     print(f"  Encounter Deck: {len(state.decks['Encounter'])} cards remaining")
+    
+    # Show recent events
+    print("\nRECENT EVENTS:")
+    recent_events = state.message_log[-5:]  # Get last 5 messages
+    for event in recent_events:
+        print(f"  {event}")
+    
     print("=" * 50)
 
 
@@ -177,6 +184,8 @@ def handle_input(state: GameState, controller: GameController) -> None:
                     played_card = state.player.play_card(card_index, state.decks["Main"])
                     if played_card:
                         state.energy -= played_card.current_value
+                        # Log the card play
+                        controller.log_event(f"Played {played_card.name} for {played_card.current_value} energy")
                         print(f"Played {played_card.name}! Energy remaining: {state.energy}")
                         
                         # Simple damage logic for attack cards
@@ -216,8 +225,6 @@ def main() -> None:
     print("  p [n] - Play card at index n from hand")
     print("  e     - End turn (enemy attacks, then new turn starts)")
     print("  q     - Quit game")
-    print("\nPress Enter to start...")
-    input()
     
     # Main game loop
     while not state.is_game_over:

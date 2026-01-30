@@ -1,6 +1,6 @@
 """Game state and controller classes for managing the central game logic."""
 
-from typing import Dict, Any
+from typing import Dict, Any, List
 from deck import Deck
 from player import Player
 
@@ -30,6 +30,7 @@ class GameState:
         self.turn_number = 1
         self.energy = 0
         self.is_game_over = False
+        self.message_log: List[str] = ["Welcome to the Three-Deck System!"]
     
     def __repr__(self) -> str:
         """
@@ -60,6 +61,18 @@ class GameController:
         """
         self.state = state
     
+    def log_event(self, message: str) -> None:
+        """
+        Log an event to the message log, keeping only the last 50 messages.
+        
+        Args:
+            message (str): The message to log.
+        """
+        self.state.message_log.append(message)
+        # Keep only the last 50 messages
+        if len(self.state.message_log) > 50:
+            self.state.message_log = self.state.message_log[-50:]
+    
     def start_turn(self) -> None:
         """
         Start a new turn by incrementing turn number, resetting energy, and drawing cards.
@@ -71,6 +84,9 @@ class GameController:
         """
         # Increment turn number
         self.state.turn_number += 1
+        
+        # Log turn start
+        self.log_event(f"--- Turn {self.state.turn_number} Started ---")
         
         # Reset energy to default of 3
         self.state.energy = 3
@@ -109,6 +125,9 @@ class GameController:
             return None
         
         enemy_card = drawn_cards[0]
+        
+        # Log enemy attack
+        self.log_event(f"The {enemy_card.name} attacks for {enemy_card.current_value} damage!")
         
         # Subtract damage from player life total
         self.state.player.life_total -= enemy_card.current_value
