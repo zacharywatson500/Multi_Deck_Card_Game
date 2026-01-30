@@ -1,3 +1,4 @@
+
 """Main entry point for the three-deck virtual card game."""
 
 import os
@@ -122,7 +123,7 @@ def handle_input(state: GameState, controller: GameController) -> None:
     """
     while True:
         try:
-            user_input = input("Enter command (d=draw, p [index]=play, q=quit): ").strip().lower()
+            user_input = input("Enter command (d=draw, p [index]=play, e=end turn, q=quit): ").strip().lower()
             
             if not user_input:
                 continue
@@ -131,6 +132,18 @@ def handle_input(state: GameState, controller: GameController) -> None:
                 # Start turn: draw cards and reset energy
                 controller.start_turn()
                 print("Cards drawn! Energy reset to 3.")
+                break
+                
+            elif user_input == 'e':
+                # End turn: resolve enemy encounter and start next turn
+                enemy_card = controller.resolve_enemy_turn()
+                if enemy_card:
+                    print(f"The {enemy_card.name} attacks for {enemy_card.current_value} damage!")
+                    # Automatically start next turn
+                    controller.start_turn()
+                    print("New turn started! Cards drawn and energy reset to 3.")
+                else:
+                    print("No enemy cards remaining!")
                 break
                 
             elif user_input == 'q':
@@ -180,7 +193,7 @@ def handle_input(state: GameState, controller: GameController) -> None:
                     continue
                     
             else:
-                print("Unknown command. Use 'd', 'p [index]', or 'q'.")
+                print("Unknown command. Use 'd', 'p [index]', 'e', or 'q'.")
                 continue
                 
         except KeyboardInterrupt:
@@ -201,6 +214,7 @@ def main() -> None:
     print("Commands:")
     print("  d     - Draw cards and start new turn")
     print("  p [n] - Play card at index n from hand")
+    print("  e     - End turn (enemy attacks, then new turn starts)")
     print("  q     - Quit game")
     print("\nPress Enter to start...")
     input()

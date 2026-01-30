@@ -11,46 +11,49 @@ A single-player virtual card game centered around a **Three-Deck System**. The g
 This file houses the "Brain" of the game, utilizing a strict separation between data storage and rule execution.
 
 * **GameState (The Model)**:
-    * **Role**: A pure data container holding the current snapshot of the game.
+    * **Role**: A data container holding the current snapshot and history of the game.
     * **Attributes**: 
-        * `decks`: A dictionary containing three `Deck` instances (Main, Resource, Encounter).
+        * `decks`: Dictionary of three `Deck` instances (Main, Resource, Encounter).
         * `player`: The active `Player` instance.
-        * `turn_number`, `energy`, and `is_game_over` (Variable State).
+        * `turn_number`, `energy`, `is_game_over`.
+        * **`message_log` (New)**: A list of strings tracking the chronological history of game events (e.g., "Player played Fireball", "Orc attacked for 4 damage").
 
 * **GameController (The Referee)**:
-    * **Role**: Executes game rules and modifies the `GameState`.
+    * **Role**: Executes game rules and serves as the primary "Journalist" for the state.
     * **Core Responsibilities**:
-        * `start_turn()`: Increments turn, resets energy, and draws initial cards.
-        * `resolve_enemy_turn()`: Handles Encounter deck logic and player damage.
-        * **Effect Resolution**: Interprets card descriptions to update player stats or deck states.
+        * `start_turn()`: Resets energy, draws cards, and logs the start of a new turn.
+        * `resolve_enemy_turn()`: Processes the Encounter deck logic and logs attack results.
+        * **`log_event()` (New)**: Centralized method to push strings into the `GameState.message_log`.
 
 ### **Encounter System (Enemy Turn)**
 * **Responsibility**: Managed entirely by the `GameController`.
-* **Logic Isolation**: The `Player` class remains unaware of the enemy; it only receives damage updates from the Controller.
+* **Logic Isolation**: The `Player` class only receives damage updates; the Controller handles the deck interaction.
 * **Flow**: 
     1. Draw one card from the `Encounter` deck.
-    2. Interpret the `current_value` as "Damage".
-    3. Apply damage to `player.life_total`.
-    4. Discard the encounter card back to the Encounter-specific discard pile.
+    2. Apply `current_value` as damage to `player.life_total`.
+    3. Discard the encounter card to its specific discard pile.
+    4. **Persistence**: The attack details are saved to the `message_log` so they survive the screen refresh.
 
 ---
 
-## 3. High-Level Game Flow (The Alpha Loop - V2)
+## 3. High-Level Game Flow (The Alpha Loop - V3)
 
-The **Heartbeat** of the game is located in `main.py`, which acts as the User Interface (UI) layer.
+The **Heartbeat** is located in `main.py`, which acts as the User Interface (UI) layer.
 
-1.  **Player Phase**:
-    * **Action**: Player plays cards using `energy`.
-    * **End Turn**: Player triggers the transition by entering the 'e' command.
-2.  **Encounter Phase**:
-    * **Trigger**: Controller calls `resolve_enemy_turn()`.
-    * **Result**: UI displays the enemy's name and the damage dealt to the player.
-3.  **Reset Phase**:
-    * **Trigger**: Controller calls `start_turn()`.
-    * **Result**: Energy is reset, turn number increments, and the loop returns to the Player Phase.
+1.  **Refresh Phase**:
+    * UI calls `clear_screen()`.
+    * UI renders Player stats and the most recent entries from the `message_log`.
+2.  **Player Phase**:
+    * Player plays cards or draws.
+    * Actions are passed to the Controller, which updates the state and the log.
+3.  **Encounter Phase**:
+    * Triggered by the 'e' command.
+    * Controller resolves the enemy attack and adds it to the log.
+4.  **Reset Phase**:
+    * Controller triggers `start_turn()` and the loop returns to the Refresh Phase.
 
 ---
 
 ## 4. Roadmap / Future Development
-* **Visual UI**: Moving from terminal print statements to a Pygame-based window.
-* **Rules Engine**: Moving complex card logic into a dedicated `rules.py` for easier balancing.
+* **Visual UI**: Transitioning to Pygame for a graphical representation of the logs and cards.
+* **Rules Engine**: Advanced card effects (Healing, Buffs) handled by the Controller.

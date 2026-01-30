@@ -83,6 +83,41 @@ class GameController:
         if "Resource" in self.state.decks:
             self.state.player.draw_from(self.state.decks["Resource"], 1)
     
+    def resolve_enemy_turn(self):
+        """
+        Resolve the enemy turn by drawing an encounter card and dealing damage.
+        
+        This method:
+        1. Draws 1 card from "Encounter" deck
+        2. Subtracts the card's current_value from player.life_total
+        3. Moves the drawn card to the Encounter deck's discard pile
+        4. Returns the drawn Card object
+        
+        Returns:
+            Card or None: The drawn encounter card, or None if no cards available
+        """
+        # Check if Encounter deck exists and has cards
+        if "Encounter" not in self.state.decks:
+            return None
+        
+        encounter_deck = self.state.decks["Encounter"]
+        
+        # Draw 1 card from Encounter deck
+        drawn_cards = encounter_deck.draw(1)
+        
+        if not drawn_cards:
+            return None
+        
+        enemy_card = drawn_cards[0]
+        
+        # Subtract damage from player life total
+        self.state.player.life_total -= enemy_card.current_value
+        
+        # Move card to discard pile
+        encounter_deck.add_to_discard(enemy_card)
+        
+        return enemy_card
+    
     def __repr__(self) -> str:
         """
         Return string representation of the game controller.
