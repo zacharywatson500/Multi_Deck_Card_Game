@@ -2,25 +2,25 @@
 
 ## ✅ Completed Recently
 - [x] Refactored project into a modular `src/` structure.
-- [x] Finalized `Card`, `Deck`, and `Player` classes.
-- [x] Implemented "Separated Architecture": Created `GameState` (Data) and `GameController` (Logic).
-- [x] Established Git Branching workflow on `feature-game-loop`.
-- [x] Streamlined `ARCHITECTURE.md` to reflect the new modular design.
+- [x] Finalized `Card`, `Deck`, and `Player` base classes.
+- [x] Implemented "Separated Architecture": `GameState` (Data) and `GameController` (Logic).
+- [x] **The Alpha Loop**: Created an interactive `main.py` that handles user commands and terminal UI.
+- [x] **Input Handling**: Implemented command parsing for Drawing, Playing (by index), and Quitting.
+- [x] **Git Milestone**: Pushed stable version to `feature-game-loop` branch.
+- [x] **Blueprint Update**: Revised `ARCHITECTURE.md` to define the Encounter System logic and Turn Phase transitions.
 
-## 🚀 Next Session: The Alpha Game Loop (`main.py`)
-- [ ] **Infrastructure & Setup:**
-    - [ ] Create `main.py` and import all classes from `src`.
-    - [ ] Create a "Dummy Card Factory" function to generate test cards for all three decks.
-    - [ ] Initialize the `GameState` (with the 3 decks and Player) and the `GameController`.
-- [ ] **The Heartbeat (Interactive Loop):**
-    - [ ] Implement a `while not game_over` loop.
-    - [ ] **Display Phase:** Print a clear UI showing Health, Energy, Hand, and Deck counts.
-    - [ ] **Input Phase:** Capture user strings (e.g., "d" to draw, "p 0" to play the first card).
-- [ ] **Action Resolution:**
-    - [ ] Link "draw" command to `controller.start_turn()`.
-    - [ ] Build basic parsing for playing a card: call the controller to remove the card from hand and move it to the correct discard pile.
-    - [ ] Verify deck cycling (shuffling back in) triggers correctly when the loop is running.
+## 🚀 Next Session: Encounter Logic & Turn Transitions
+- [ ] **Implement Enemy Turn (GameController)**:
+    - [ ] Create `resolve_enemy_turn()` to draw from the Encounter deck.
+    - [ ] Apply Encounter card value as damage to `player.life_total`.
+    - [ ] Ensure Encounter cards are properly moved to their specific discard pile.
+- [ ] **Update Input Handling (main.py)**:
+    - [ ] Add the `e` (End Turn) command to trigger the Encounter Phase.
+    - [ ] Add terminal print statements to announce the Enemy's name and damage dealt.
+    - [ ] Automate the call to `controller.start_turn()` after the enemy finishes.
+- [ ] **Effect Resolution Expansion**:
+    - [ ] Link card descriptions to actual state changes (e.g., healing or multi-draw).
 
 ## 💡 Notes for Today
-- **Focus on Connectivity:** The goal today isn't to make the game "fun" yet, but to prove that the Loop can talk to the Controller, and the Controller can update the State.
-- **Verification:** Use print statements liberally to confirm that the numbers (Energy/Hand count) change exactly when you expect them to.
+- **Architecture is Key**: Maintain the "Referee" role of the `GameController`; `main.py` should only trigger logic, not calculate damage itself.
+- **Turn Sequence**: By isolating `resolve_enemy_turn()`, we maintain the flexibility to change turn order later without refactoring the core logic.

@@ -16,33 +16,38 @@ This file houses the "Brain" of the game, utilizing a strict separation between 
         * `decks`: A dictionary containing three `Deck` instances (Main, Resource, Encounter).
         * `player`: The active `Player` instance.
         * `turn_number`, `energy`, and `is_game_over` (Variable State).
+
 * **GameController (The Referee)**:
     * **Role**: Executes game rules and modifies the `GameState`.
     * **Core Responsibilities**:
         * `start_turn()`: Increments turn, resets energy, and draws initial cards.
-        * **Validation**: Ensures actions (like playing a card) are legal before modifying state.
+        * `resolve_enemy_turn()`: Handles Encounter deck logic and player damage.
         * **Effect Resolution**: Interprets card descriptions to update player stats or deck states.
 
-### **Supporting Systems**
-* **Card System** (`card.py`): Defines attributes for Name, Type, Cost, and Effect. **(Complete)**
-* **Deck System** (`deck.py`): Handles draw/discard piles and automatic shuffling/cycling. **(Complete)**
-* **Player System** (`player.py`): Manages the player's `hand`, `life_total`, and `resource_level`. **(Complete)**
+### **Encounter System (Enemy Turn)**
+* **Responsibility**: Managed entirely by the `GameController`.
+* **Logic Isolation**: The `Player` class remains unaware of the enemy; it only receives damage updates from the Controller.
+* **Flow**: 
+    1. Draw one card from the `Encounter` deck.
+    2. Interpret the `current_value` as "Damage".
+    3. Apply damage to `player.life_total`.
+    4. Discard the encounter card back to the Encounter-specific discard pile.
 
 ---
 
-## 3. High-Level Game Flow (The Alpha Loop)
+## 3. High-Level Game Flow (The Alpha Loop - V2)
 
 The **Heartbeat** of the game is located in `main.py`, which acts as the User Interface (UI) layer.
 
-1.  **Initialization**: 
-    * Generate test cards and populate the `Main`, `Resource`, and `Encounter` decks.
-    * Instantiate `GameState` and `GameController`.
-2.  **The Interactive Loop (`while not is_game_over`)**:
-    * **Display**: Print the current `GameState` (Hand, Health, Energy, and Deck sizes).
-    * **Input**: Capture user commands (e.g., `d` for draw, `p` for play, `q` for quit).
-    * **Action**: Pass valid commands to the `GameController` to update the `GameState`.
-3.  **Turn Transition**: 
-    * The loop resets for the next player action until an "End Turn" or "Quit" command is received.
+1.  **Player Phase**:
+    * **Action**: Player plays cards using `energy`.
+    * **End Turn**: Player triggers the transition by entering the 'e' command.
+2.  **Encounter Phase**:
+    * **Trigger**: Controller calls `resolve_enemy_turn()`.
+    * **Result**: UI displays the enemy's name and the damage dealt to the player.
+3.  **Reset Phase**:
+    * **Trigger**: Controller calls `start_turn()`.
+    * **Result**: Energy is reset, turn number increments, and the loop returns to the Player Phase.
 
 ---
 
