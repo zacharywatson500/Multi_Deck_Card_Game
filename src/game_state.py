@@ -27,7 +27,7 @@ class GameState:
         """
         self.decks = decks
         self.player = player
-        self.turn_number = 1
+        self.turn_number = 0
         self.energy = 0
         self.is_game_over = False
         self.message_log: List[str] = ["Welcome to the Three-Deck System!"]
@@ -75,12 +75,11 @@ class GameController:
     
     def start_turn(self) -> None:
         """
-        Start a new turn by incrementing turn number, resetting energy, and drawing cards.
+        Start a new turn by incrementing turn number and resetting energy to 5.
         
         This method:
         1. Increments self.state.turn_number
-        2. Resets self.state.energy to 3
-        3. Draws 1 card from "Main" deck and 1 card from "Resource" deck
+        2. Resets self.state.energy to 5
         """
         # Increment turn number
         self.state.turn_number += 1
@@ -88,16 +87,8 @@ class GameController:
         # Log turn start
         self.log_event(f"--- Turn {self.state.turn_number} Started ---")
         
-        # Reset energy to default of 3
-        self.state.energy = 3
-        
-        # Draw 1 card from Main deck
-        if "Main" in self.state.decks:
-            self.state.player.draw_from(self.state.decks["Main"], 1)
-        
-        # Draw 1 card from Resource deck
-        if "Resource" in self.state.decks:
-            self.state.player.draw_from(self.state.decks["Resource"], 1)
+        # Reset energy to 5
+        self.state.energy = 5
     
     def resolve_enemy_turn(self):
         """
@@ -136,6 +127,32 @@ class GameController:
         encounter_deck.add_to_discard(enemy_card)
         
         return enemy_card
+    
+    def handle_draw_action(self) -> bool:
+        """
+        Handle paid draw action: spend 1 energy to draw 1 card from Main and Resource decks.
+        
+        Returns:
+            bool: True if draw was successful, False if not enough energy.
+        """
+        if self.state.energy >= 1:
+            # Subtract 1 energy
+            self.state.energy -= 1
+            
+            # Draw 1 card from Main deck
+            if "Main" in self.state.decks:
+                self.state.player.draw_from(self.state.decks["Main"], 1)
+            
+            # Draw 1 card from Resource deck
+            if "Resource" in self.state.decks:
+                self.state.player.draw_from(self.state.decks["Resource"], 1)
+            
+            # Log the action
+            self.log_event("Spent 1 energy to draw cards.")
+            return True
+        else:
+            self.log_event("⚠️ Not enough energy to draw!")
+            return False
     
     def __repr__(self) -> str:
         """

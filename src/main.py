@@ -70,6 +70,9 @@ def setup_game() -> Tuple[GameState, GameController]:
     # Create a GameController with that state
     game_controller = GameController(game_state)
     
+    # Initialize Turn 1
+    game_controller.start_turn()
+    
     return game_state, game_controller
 
 
@@ -136,19 +139,16 @@ def handle_input(state: GameState, controller: GameController) -> None:
                 continue
                 
             if user_input == 'd':
-                # Start turn: draw cards and reset energy
-                controller.start_turn()
-                print("Cards drawn! Energy reset to 3.")
+                # Paid draw action
+                controller.handle_draw_action()
                 break
                 
             elif user_input == 'e':
                 # End turn: resolve enemy encounter and start next turn
                 enemy_card = controller.resolve_enemy_turn()
                 if enemy_card:
-                    print(f"The {enemy_card.name} attacks for {enemy_card.current_value} damage!")
                     # Automatically start next turn
                     controller.start_turn()
-                    print("New turn started! Cards drawn and energy reset to 3.")
                 else:
                     print("No enemy cards remaining!")
                 break
@@ -221,7 +221,7 @@ def main() -> None:
     
     print("Welcome to the Three-Deck Card Game!")
     print("Commands:")
-    print("  d     - Draw cards and start new turn")
+    print("  d     - Draw cards (costs 1 energy)")
     print("  p [n] - Play card at index n from hand")
     print("  e     - End turn (enemy attacks, then new turn starts)")
     print("  q     - Quit game")
