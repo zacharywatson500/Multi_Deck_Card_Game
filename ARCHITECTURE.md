@@ -16,44 +16,43 @@ This file houses the "Brain" of the game, utilizing a strict separation between 
         * `decks`: Dictionary of three `Deck` instances (Main, Resource, Encounter).
         * `player`: The active `Player` instance.
         * `turn_number`, `energy`, `is_game_over`.
-        * **`message_log` (New)**: A list of strings tracking the chronological history of game events (e.g., "Player played Fireball", "Orc attacked for 4 damage").
+        * `message_log`: A list of strings tracking the chronological history of game events.
 
 * **GameController (The Referee)**:
     * **Role**: Executes game rules and serves as the primary "Journalist" for the state.
     * **Core Responsibilities**:
-        * `start_turn()`: Resets energy, draws cards, and logs the start of a new turn.
+        * `start_turn()`: Increments turn number, resets energy to **5**, and logs the start of a new turn.
+        * `handle_draw_action()`: **(New)** Checks for 1 available energy to draw one card from all active decks (Main, Resource).
         * `resolve_enemy_turn()`: Processes the Encounter deck logic and logs attack results.
-        * **`log_event()` (New)**: Centralized method to push strings into the `GameState.message_log`.
+        * `log_event()`: Centralized method to push strings into the `GameState.message_log`.
 
-### **Encounter System (Enemy Turn)**
-* **Responsibility**: Managed entirely by the `GameController`.
-* **Logic Isolation**: The `Player` class only receives damage updates; the Controller handles the deck interaction.
-* **Flow**: 
-    1. Draw one card from the `Encounter` deck.
-    2. Apply `current_value` as damage to `player.life_total`.
-    3. Discard the encounter card to its specific discard pile.
-    4. **Persistence**: The attack details are saved to the `message_log` so they survive the screen refresh.
+### **The Energy Economy**
+* **Turn Start**: Energy resets to a base of **5**.
+* **Resource Management**: 
+    * **Drawing**: Costs **1 energy** per draw action.
+    * **Playing**: Costs energy equal to the card's `current_value`.
+* **Tactical Choice**: Players must balance spending energy on gathering new cards (Drawing) versus executing their current hand (Playing).
 
 ---
 
-## 3. High-Level Game Flow (The Alpha Loop - V3)
+## 3. High-Level Game Flow (The Alpha Loop - V4)
 
 The **Heartbeat** is located in `main.py`, which acts as the User Interface (UI) layer.
 
 1.  **Refresh Phase**:
-    * UI calls `clear_screen()`.
-    * UI renders Player stats and the most recent entries from the `message_log`.
-2.  **Player Phase**:
-    * Player plays cards or draws.
-    * Actions are passed to the Controller, which updates the state and the log.
+    * UI calls `clear_screen()` and renders Player stats and recent `message_log` entries.
+2.  **Player Phase (The Decision Loop)**:
+    * **Play Card**: Costs energy; card logic is resolved.
+    * **Draw Card**: Costs **1 energy**; adds new cards to hand via `handle_draw_action()`.
 3.  **Encounter Phase**:
-    * Triggered by the 'e' command.
+    * Triggered explicitly by the 'e' command.
     * Controller resolves the enemy attack and adds it to the log.
 4.  **Reset Phase**:
-    * Controller triggers `start_turn()` and the loop returns to the Refresh Phase.
+    * Controller triggers `start_turn()` to reset energy and the loop returns to the Refresh Phase.
 
 ---
 
 ## 4. Roadmap / Future Development
-* **Visual UI**: Transitioning to Pygame for a graphical representation of the logs and cards.
-* **Rules Engine**: Advanced card effects (Healing, Buffs) handled by the Controller.
+* **Card Limit**: Implementing a maximum hand size to prevent "over-drawing".
+* **Visual UI**: Transitioning to Pygame for a graphical representation.
+* **Rules Engine**: Advanced card effects (Healing, Buffs).
