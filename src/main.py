@@ -169,42 +169,23 @@ def handle_input(state: GameState, controller: GameController) -> None:
                         
                     card_index = int(parts[1])
                     
-                    if card_index < 0 or card_index >= len(state.player.hand):
-                        print(f"Invalid card index. Must be between 0 and {len(state.player.hand) - 1}")
+                    # Use controller.can_play_card for validation
+                    if not controller.can_play_card(card_index):
+                        if card_index < 0 or card_index >= len(state.player.hand):
+                            print(f"Invalid card index. Must be between 0 and {len(state.player.hand) - 1}")
+                        else:
+                            card = state.player.hand[card_index]
+                            print(f"Not enough energy! Need {card.current_value}, have {state.energy}")
                         continue
-                    
+
+                    # Store card reference before playing it
                     card = state.player.hand[card_index]
                     
-                    # Check if player has enough energy
-                    if state.energy < card.current_value and card.deck_type != "Resource":
-                        print(f"Not enough energy! Need {card.current_value}, have {state.energy}")
-                        continue
-
-                    
-                    target_deck_type = card.deck_type # e.g., "Main" or "Resource"
-
-                    # 2. Play the card using its OWN deck type to find the correct discard pile
-                    played_card = state.player.play_card(card_index, state.decks[target_deck_type])
-                    # Play the card
-                    if played_card:
-                        if played_card.deck_type == "Resource": 
-                            action_message = f"Gained {played_card.current_value} energy!"
-                            # For resource cards, add the energy back (they represent energy gain)
-                            state.energy += played_card.current_value 
-                    
-                            # Log the energy gain
-                            controller.log_event(f"Gained {played_card.current_value} energy from {played_card.name}")
-
-                        elif played_card.deck_type == "Main": 
-                            action_message= f"Dealt {played_card.current_value} damage to enemy!"
-                            # For main cards, subtract the energy (they represent damage)
-                            state.energy -= played_card.current_value
-                        
-                            # Log the card play
-                            controller.log_event(f"Played {played_card.name} for {played_card.current_value} energy")
-                            
-                    print(f"Played {played_card.name}!: {action_message}") 
-                    print(f"Energy remaining: {state.energy}")
+                    # If validation passes, call controller.resolve_card
+                    if controller.resolve_card(card_index):
+                        action_message = f"Gained {card.current_value} energy!" if card.deck_type == "Resource" else f"Dealt {card.current_value} damage to enemy!"
+                        print(f"Played {card.name}!: {action_message}") 
+                        print(f"Energy remaining: {state.energy}")
                     break
                     
                 except ValueError:

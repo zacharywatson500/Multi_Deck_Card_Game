@@ -128,6 +128,64 @@ class GameController:
         
         return enemy_card
     
+    def can_play_card(self, index: int) -> bool:
+        """
+        Check if a card can be played from the player's hand.
+        
+        Args:
+            index (int): Index of the card in the player's hand.
+            
+        Returns:
+            bool: True if the card can be played, False otherwise.
+        """
+        # Check if the card index is valid for the hand
+        if index < 0 or index >= len(self.state.player.hand):
+            return False
+        
+        card = self.state.player.hand[index]
+        
+        # If the card is a "Resource" type, return True (bypasses energy checks)
+        if card.deck_type == "Resource":
+            return True
+        
+        # If not a Resource, return True only if self.state.energy >= card.current_value
+        return self.state.energy >= card.current_value
+    
+    def resolve_card(self, index: int) -> bool:
+        """
+        Resolve playing a card from the player's hand.
+        
+        Args:
+            index (int): Index of the card in the player's hand.
+            
+        Returns:
+            bool: True if the card was successfully played, False otherwise.
+        """
+        # Retrieve the card and its target_deck_type
+        if index < 0 or index >= len(self.state.player.hand):
+            return False
+        
+        card = self.state.player.hand[index]
+        target_deck_type = card.deck_type
+        
+        # Call self.state.player.play_card(index, self.state.decks[target_deck_type])
+        played_card = self.state.player.play_card(index, self.state.decks[target_deck_type])
+        
+        if not played_card:
+            return False
+        
+        # Logic Branching
+        if played_card.deck_type == "Resource":
+            # Add current_value to self.state.energy and log "✨ Gained [X] energy from [Name]"
+            self.state.energy += played_card.current_value
+            self.log_event(f"✨ Gained {played_card.current_value} energy from {played_card.name}")
+        else:
+            # Subtract current_value from self.state.energy and log "Played [Name] for [X] energy"
+            self.state.energy -= played_card.current_value
+            self.log_event(f"Played {played_card.name} for {played_card.current_value} energy")
+        
+        return True
+
     def handle_draw_action(self) -> bool:
         """
         Handle paid draw action: spend 1 energy to draw 1 card from Main and Resource decks.
