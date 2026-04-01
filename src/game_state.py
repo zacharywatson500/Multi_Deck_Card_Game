@@ -30,6 +30,7 @@ class GameState:
         self.turn_number = 0
         self.energy = 0
         self.is_game_over = False
+        self.current_enemy_health = 30
         self.message_log: List[str] = ["Welcome to the Three-Deck System!"]
     
     def __repr__(self) -> str:
@@ -187,7 +188,16 @@ class GameController:
         else:  # Attack category
             # Subtract current_value from self.state.energy and log attack
             self.state.energy -= played_card.current_value
-            self.log_event(f"⚔️ Attacked with {played_card.name} for {played_card.current_value} energy")
+            
+            # Reduce enemy health
+            self.state.current_enemy_health -= played_card.current_value
+            
+            # Check if enemy is defeated
+            if self.state.current_enemy_health <= 0:
+                self.state.current_enemy_health = 0
+                self.log_event(f"⚔️ Attacked with {played_card.name} for {played_card.current_value} damage! Enemy defeated!")
+            else:
+                self.log_event(f"⚔️ Attacked with {played_card.name} for {played_card.current_value} damage! Enemy health: {self.state.current_enemy_health}")
         
         return True
 

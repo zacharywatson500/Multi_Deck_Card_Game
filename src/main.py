@@ -27,7 +27,7 @@ def display_ui(state: GameState) -> None:
     print("=" * 50)
     print(f"TURN {state.turn_number}")
     print("=" * 50)
-    print(f"Player Health: {state.player.life_total}")
+    print(f"Player Health: {state.player.life_total} | Enemy Health: {state.current_enemy_health}")
     print(f"Energy: {state.energy}")
     print("\nDeck Status:")
     print(f"  Main Deck: {len(state.decks['Main'])} cards remaining")
@@ -172,9 +172,9 @@ def main() -> None:
         if state.player.life_total <= 0:
             state.is_game_over = True
             print("Game Over! You have been defeated.")
-        #elif len(state.decks["Main"]) == 0 and len(state.decks["Resource"]) == 0:
-        #    state.is_game_over = True
-        #    print("Game Over! All decks are empty.")
+        elif state.current_enemy_health <= 0:
+            state.is_game_over = True
+            print("Victory! The Boss has been defeated!")
     
     print("\nThanks for playing!")
 
