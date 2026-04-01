@@ -30,7 +30,7 @@ class GameState:
         self.turn_number = 0
         self.energy = 0
         self.is_game_over = False
-        self.current_enemy_health = 30
+        self.current_enemy_health = 10
         self.message_log: List[str] = ["Welcome to the Three-Deck System!"]
     
     def __repr__(self) -> str:
