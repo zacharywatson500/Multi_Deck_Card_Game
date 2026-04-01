@@ -2,10 +2,10 @@
 
 from typing import Tuple
 
-from card import Card
-from deck import Deck
-from player import Player
-from game_state import GameState, GameController
+from .card import Card
+from .deck import Deck
+from .player import Player
+from .game_state import GameState, GameController
 
 
 def setup_game() -> Tuple[GameState, GameController]:

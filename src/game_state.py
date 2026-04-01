@@ -1,8 +1,8 @@
 """Game state and controller classes for managing the central game logic."""
 
 from typing import Dict, Any, List
-from deck import Deck
-from player import Player
+from .deck import Deck
+from .player import Player
 
 
 class GameState:
@@ -239,7 +239,7 @@ class GameController:
 
 if __name__ == "__main__":
     # Example usage
-    from card import Card
+    from .card import Card
     
     # Create test cards for decks
     main_cards = [

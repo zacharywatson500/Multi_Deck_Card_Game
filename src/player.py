@@ -1,8 +1,8 @@
 """Player class for a three-deck virtual card game."""
 
 from typing import List, Optional
-from card import Card
-from deck import Deck
+from .card import Card
+from .deck import Deck
 
 
 class Player:
@@ -88,7 +88,7 @@ class Player:
 
 if __name__ == "__main__":
     # Test simulation
-    from card import Card
+    from .card import Card
     
     # Initialize a player and a test deck
     player = Player(life_total=20, resource_level=5)

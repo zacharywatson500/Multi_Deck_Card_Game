@@ -2,14 +2,11 @@
 """Main entry point for the three-deck virtual card game."""
 
 import os
-import sys 
-from player import Player
+import sys
+from src.player import Player
 
-
-# Add parent directory to path to import game_factory
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from game_factory import setup_game
-from game_state import GameState, GameController
+from src.game_factory import setup_game
+from src.game_state import GameState, GameController
 
 
 def clear_screen() -> None:
