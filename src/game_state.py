@@ -144,8 +144,8 @@ class GameController:
         
         card = self.state.player.hand[index]
         
-        # If the card is a "Resource" type, return True (bypasses energy checks)
-        if card.deck_type == "Resource":
+        # If the card is a "Resource" category, return True (bypasses energy checks)
+        if card.category == "Resource":
             return True
         
         # If not a Resource, return True only if self.state.energy >= card.current_value
@@ -175,14 +175,19 @@ class GameController:
             return False
         
         # Logic Branching
-        if played_card.deck_type == "Resource":
+        if played_card.category == "Resource":
             # Add current_value to self.state.energy and log "✨ Gained [X] energy from [Name]"
             self.state.energy += played_card.current_value
             self.log_event(f"✨ Gained {played_card.current_value} energy from {played_card.name}")
-        else:
-            # Subtract current_value from self.state.energy and log "Played [Name] for [X] energy"
+        elif played_card.category == "Healing":
+            # Increase player life_total and log healing
+            self.state.player.life_total += played_card.current_value
             self.state.energy -= played_card.current_value
-            self.log_event(f"Played {played_card.name} for {played_card.current_value} energy")
+            self.log_event(f"💚 Healed {played_card.current_value} health from {played_card.name}")
+        else:  # Attack category
+            # Subtract current_value from self.state.energy and log attack
+            self.state.energy -= played_card.current_value
+            self.log_event(f"⚔️ Attacked with {played_card.name} for {played_card.current_value} energy")
         
         return True
 

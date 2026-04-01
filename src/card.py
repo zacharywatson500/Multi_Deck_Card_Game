@@ -20,6 +20,7 @@ class Card:
         name: str,
         deck_type: str,
         value: int,
+        category: str = "Attack",
         description: Optional[str] = ""
     ) -> None:
         """
@@ -29,6 +30,7 @@ class Card:
             name (str): The name of the card.
             deck_type (str): To identify which of the three decks this card belongs to.
             value (int): The numerical power or cost of the card.
+            category (str): The functional category of the card (Attack, Healing, Resource).
             description (str, optional): A brief explanation of what the card does.
                                         Defaults to an empty string.
         """
@@ -36,6 +38,7 @@ class Card:
         self.deck_type = deck_type
         self.base_value = value
         self.current_value = value
+        self.category = category
         self.description = description.strip()
     
     def __repr__(self) -> str:
@@ -45,7 +48,7 @@ class Card:
         Returns:
             str: Formatted string in the format: [Name | Deck: Type | Value: current_value (Base: base_value)]
         """
-        return f"[{self.name} | Deck: {self.deck_type} | Value: {self.current_value} (Base: {self.base_value})]"
+        return f"[{self.name} | Cat: {self.category} | Deck: {self.deck_type} | Value: {self.current_value} (Base: {self.base_value})]"
     
     def update_value(self, new_value: int) -> None:
         """
