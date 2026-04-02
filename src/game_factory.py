@@ -1,57 +1,49 @@
 """Game factory module for setting up the Tri-Deck card game."""
 
-from typing import Tuple
+from typing import Tuple, List
 
 from .card import Card
 from .deck import Deck
 from .player import Player
 from .game_state import GameState, GameController
+from .database_manager import initialize_database, get_all_cards
 
 
 def setup_game() -> Tuple[GameState, GameController]:
     """
-    Dummy Card Factory helper function that sets up the game.
+    Card Factory helper function that sets up the game using database-loaded cards.
     
     Returns:
         Tuple[GameState, GameController]: The initialized game state and controller.
     """
+    # Initialize the database (creates it if it doesn't exist)
+    initialize_database()
+    
     # Instantiate a Player
     player = Player("Hero", life_total=20, resource_level=0)
     
-    # Generate three distinct lists of Card objects
-    # Attack cards for "Main" deck
-    main_cards = [
-        Card("Fireball", "Main", 3, "Attack", "Deal 3 damage to enemy"),
-        Card("Sword Strike", "Main", 2, "Attack", "Deal 2 damage to enemy"),
-        Card("Lightning Bolt", "Main", 4, "Attack", "Deal 4 damage to enemy"),
-        Card("Ice Shard", "Main", 2, "Attack", "Deal 2 damage to enemy"),
-        Card("Arrow Shot", "Main", 1, "Attack", "Deal 1 damage to enemy"),
-        Card("Healing Potion", "Main", 3, "Healing", "Restore 3 health"),
-        Card("Regeneration", "Main", 2, "Healing", "Restore 2 health")
-    ]
+    # Load all cards from the database
+    card_data = get_all_cards()
     
-    # Energy cards for "Resource" deck
-    resource_cards = [
-        Card("Energy Crystal", "Resource", 1, "Resource", "Gain 1 energy"),
-        Card("Mana Potion", "Resource", 2, "Resource", "Gain 2 energy"),
-        Card("Power Gem", "Resource", 3, "Resource", "Gain 3 energy"),
-        Card("Focus Charm", "Resource", 1, "Resource", "Gain 1 energy"),
-        Card("Meditation", "Resource", 2, "Resource", "Gain 2 energy")
-    ]
+    # Separate cards by deck type
+    main_cards = []
+    resource_cards = []
+    encounter_cards = []
     
-    # Enemy cards for "Encounter" deck
-    enemy_cards = [
-        Card("Goblin", "Encounter", 2, "Attack", "Enemy with 2 health"),
-        Card("Orc", "Encounter", 4, "Attack", "Enemy with 4 health"),
-        Card("Dragon", "Encounter", 8, "Attack", "Enemy with 8 health"),
-        Card("Skeleton", "Encounter", 1, "Attack", "Enemy with 1 health"),
-        Card("Troll", "Encounter", 6, "Attack", "Enemy with 6 health")
-    ]
+    for name, deck_type, value, category, description in card_data:
+        card = Card(name, deck_type, value, category, description)
+        
+        if deck_type == "Main":
+            main_cards.append(card)
+        elif deck_type == "Resource":
+            resource_cards.append(card)
+        elif deck_type == "Encounter":
+            encounter_cards.append(card)
     
     # Create three Deck instances using these cards
     main_deck = Deck(main_cards)
     resource_deck = Deck(resource_cards)
-    encounter_deck = Deck(enemy_cards)
+    encounter_deck = Deck(encounter_cards)
     
     # Shuffle all decks
     main_deck.shuffle()
