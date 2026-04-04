@@ -25,6 +25,10 @@ def setup_game() -> Tuple[GameState, GameController]:
     # Load all cards from the database
     card_data = get_all_cards()
     
+    # Fail-fast: Check if database is empty
+    if not card_data:
+        raise RuntimeError("Database is empty. Please run 'python seed_db.py' to initialize card data.")
+    
     # Separate cards by deck type
     main_cards = []
     resource_cards = []
