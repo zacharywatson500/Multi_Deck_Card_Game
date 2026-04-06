@@ -1,5 +1,5 @@
 
-"""Main entry point for the three-deck virtual card game."""
+"""Main entry point for the four-deck virtual card game."""
 
 import os
 import sys
@@ -28,10 +28,10 @@ def display_ui(state: GameState) -> None:
     print(f"Player Health: {state.player.life_total} | Enemy Health: {state.current_enemy_health}")
     print(f"Energy: {state.energy}")
     print("\nDeck Status:")
-    print(f"  Main Deck: {len(state.decks['Main'])} cards remaining")
+    print(f"  Attack Deck: {len(state.decks['Attack'])} cards remaining")
+    print(f"  Healing Deck: {len(state.decks['Healing'])} cards remaining")
     print(f"  Resource Deck: {len(state.decks['Resource'])} cards remaining")
     print(f"  Encounter Deck: {len(state.decks['Encounter'])} cards remaining")
-    print(f"  Your Deck: {len(state.player_deck)} cards")
     
     # Show recent events
     print("\nRECENT EVENTS:")
@@ -73,8 +73,13 @@ def drafting_phase(state: GameState, controller: GameController) -> None:
     # Get cards already in player's deck to exclude them
     player_deck_names = controller.get_player_deck_names()
     
-    # Get 3 random cards from Main deck that aren't already in player's deck
-    draft_options = get_random_cards("Main", 3, player_deck_names)
+    # Get 1 random card from each of the three active player decks
+    attack_options = get_random_cards("Attack", 1, player_deck_names) if player_deck_names else get_random_cards("Attack", 1)
+    healing_options = get_random_cards("Healing", 1, player_deck_names) if player_deck_names else get_random_cards("Healing", 1)
+    resource_options = get_random_cards("Resource", 1, player_deck_names) if player_deck_names else get_random_cards("Resource", 1)
+    
+    # Combine options for drafting
+    draft_options = attack_options + healing_options + resource_options
     
     if not draft_options:
         print("No new cards available for drafting!")
@@ -83,7 +88,8 @@ def drafting_phase(state: GameState, controller: GameController) -> None:
     
     print("\nChoose a card to add to your deck:")
     for i, (name, deck_type, value, category, description) in enumerate(draft_options):
-        print(f"  [{i+1}] {name} (Cost: {value}) - {description}")
+        deck_label = f"[{deck_type}]"
+        print(f"  [{i+1}] {name} (Cost: {value}) {deck_label} - {description}")
     print(f"  [0] Skip drafting")
     
     while True:
@@ -137,7 +143,7 @@ def handle_input(state: GameState, controller: GameController) -> None:
                 continue
                 
             if user_input == 'd':
-                # Paid draw action
+                # Paid draw action - automatically draw from Attack, Healing, and Resource decks
                 controller.handle_draw_action()
                 break
                 
@@ -215,9 +221,9 @@ def main() -> None:
     # Set up the game
     state, controller = setup_game()
     
-    print("Welcome to the Three-Deck Card Game!")
+    print("Welcome to the Four-Deck Card Game!")
     print("Commands:")
-    print("  d     - Draw cards (costs 1 energy)")
+    print("  d     - Draw cards (costs 1 energy - draws from Attack, Healing, and Resource)")
     print("  p [n] - Play card at index n from hand")
     print("  e     - End turn (enemy attacks, then new turn starts)")
     print("  q     - Quit game")

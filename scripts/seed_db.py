@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Standalone database seeding script for the Tri-Deck card game.
+Standalone database seeding script for the Quad-Deck card game.
 
 Run this script to populate an empty database with default card data.
 """
@@ -8,10 +8,11 @@ Run this script to populate an empty database with default card data.
 import sys
 import os
 
-# Add the src directory to the Python path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
+# Add the project root to the Python path to import from src
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, project_root)
 
-from database_manager import seed_default_data
+from src.database_manager import seed_default_data
 
 if __name__ == "__main__":
     print("Seeding database with default card data...")

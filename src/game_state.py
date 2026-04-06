@@ -33,8 +33,7 @@ class GameState:
         self.energy = 0
         self.is_game_over = False
         self.current_enemy_health = 10
-        self.message_log: List[str] = ["Welcome to the Three-Deck System!"]
-        self.player_deck: List[Card] = []  # Player's personal deck for deck-building
+        self.message_log: List[str] = ["Welcome to the Four-Deck System!"]
     
     def __repr__(self) -> str:
         """
@@ -225,24 +224,49 @@ class GameController:
         name, deck_type, value, category, description = card_data
         new_card = Card(name, deck_type, value, category, description)
         
-        # Add to player's personal deck
-        self.state.player_deck.append(new_card)
-        self.log_event(f"🎴 Added '{card_name}' to your deck!")
+        # Add card to specific category deck
+        if deck_type in self.state.decks:
+            self.state.decks[deck_type].cards.append(new_card)
+            self.state.decks[deck_type].shuffle()  # Shuffle so new card isn't at bottom
+            self.log_event(f"🎴 Added '{card_name}' to your {deck_type} deck!")
+        else:
+            self.log_event(f"⚠️ Deck type '{deck_type}' not found!")
+            return False
         
         return True
     
     def get_player_deck_names(self) -> List[str]:
         """
-        Get a list of card names currently in the player's deck.
+        Get a list of card names currently in all player deck arrays and hand.
         
         Returns:
-            List[str]: List of card names in the player's deck.
+            List[str]: List of card names in all player decks and hand.
         """
-        return [card.name for card in self.state.player_deck]
+        all_names = []
+        
+        # Add names from Attack deck (cards and discard pile)
+        if "Attack" in self.state.decks:
+            all_names.extend(card.name for card in self.state.decks["Attack"].cards)
+            all_names.extend(card.name for card in self.state.decks["Attack"].discard_pile)
+        
+        # Add names from Healing deck (cards and discard pile)
+        if "Healing" in self.state.decks:
+            all_names.extend(card.name for card in self.state.decks["Healing"].cards)
+            all_names.extend(card.name for card in self.state.decks["Healing"].discard_pile)
+        
+        # Add names from Resource deck (cards and discard pile)
+        if "Resource" in self.state.decks:
+            all_names.extend(card.name for card in self.state.decks["Resource"].cards)
+            all_names.extend(card.name for card in self.state.decks["Resource"].discard_pile)
+        
+        # Add names from player's hand
+        all_names.extend(card.name for card in self.state.player.hand)
+        
+        return all_names
 
     def handle_draw_action(self) -> bool:
         """
-        Handle paid draw action: spend 1 energy to draw 1 card from Main and Resource decks.
+        Handle paid draw action: spend 1 energy to draw 1 card from Attack, Healing, and Resource decks.
         
         Returns:
             bool: True if draw was successful, False if not enough energy.
@@ -251,16 +275,19 @@ class GameController:
             # Subtract 1 energy
             self.state.energy -= 1
             
-            # Draw 1 card from Main deck
-            if "Main" in self.state.decks:
-                self.state.player.draw_from(self.state.decks["Main"], 1)
+            # Draw 1 card from Attack deck
+            if "Attack" in self.state.decks:
+                self.state.player.draw_from(self.state.decks["Attack"], 1)
+            
+            # Draw 1 card from Healing deck
+            if "Healing" in self.state.decks:
+                self.state.player.draw_from(self.state.decks["Healing"], 1)
             
             # Draw 1 card from Resource deck
             if "Resource" in self.state.decks:
                 self.state.player.draw_from(self.state.decks["Resource"], 1)
             
-            # Log the action
-            self.log_event("Spent 1 energy to draw cards.")
+            self.log_event("Spent 1 energy to draw 1 card from Attack, Healing, and Resource decks.")
             return True
         else:
             self.log_event("⚠️ Not enough energy to draw!")
