@@ -70,16 +70,7 @@ def drafting_phase(state: GameState, controller: GameController) -> None:
     print("🎴 DRAFTING PHASE 🎴")
     print("=" * 50)
     
-    # Get cards already in player's deck to exclude them
-    player_deck_names = controller.get_player_deck_names()
-    
-    # Get 1 random card from each of the three active player decks
-    attack_options = get_random_cards("Attack", 1, player_deck_names) if player_deck_names else get_random_cards("Attack", 1)
-    healing_options = get_random_cards("Healing", 1, player_deck_names) if player_deck_names else get_random_cards("Healing", 1)
-    resource_options = get_random_cards("Resource", 1, player_deck_names) if player_deck_names else get_random_cards("Resource", 1)
-    
-    # Combine options for drafting
-    draft_options = attack_options + healing_options + resource_options
+    draft_options = controller.prepare_draft_options()
     
     if not draft_options:
         print("No new cards available for drafting!")

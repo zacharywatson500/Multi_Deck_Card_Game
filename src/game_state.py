@@ -1,10 +1,10 @@
 """Game state and controller classes for managing the central game logic."""
 
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Tuple
 from .deck import Deck
 from .player import Player
 from .card import Card
-from .database_manager import get_card_by_name
+from .database_manager import get_card_by_name, get_random_cards
 
 
 class GameState:
@@ -263,6 +263,24 @@ class GameController:
         all_names.extend(card.name for card in self.state.player.hand)
         
         return all_names
+
+    def prepare_draft_options(self) -> List[Tuple]:
+        """
+        Prepare draft options by getting 1 card each from Attack, Healing, and Resource decks.
+        
+        Returns:
+            List[Tuple]: Combined list of draft options from all three deck types.
+        """
+        # Get cards already in player's deck to exclude them
+        player_deck_names = self.get_player_deck_names()
+        
+        # Get 1 random card from each of the three active player decks
+        attack_options = get_random_cards("Attack", 1, player_deck_names) if player_deck_names else get_random_cards("Attack", 1)
+        healing_options = get_random_cards("Healing", 1, player_deck_names) if player_deck_names else get_random_cards("Healing", 1)
+        resource_options = get_random_cards("Resource", 1, player_deck_names) if player_deck_names else get_random_cards("Resource", 1)
+        
+        # Combine options for drafting
+        return attack_options + healing_options + resource_options
 
     def handle_draw_action(self) -> bool:
         """
