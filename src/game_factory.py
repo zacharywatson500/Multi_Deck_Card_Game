@@ -6,7 +6,7 @@ from .card import Card
 from .deck import Deck
 from .player import Player
 from .game_state import GameState, GameController
-from .database_manager import initialize_database, get_all_cards
+from .database_manager import initialize_database, get_random_cards
 
 
 def setup_game() -> Tuple[GameState, GameController]:
@@ -22,27 +22,22 @@ def setup_game() -> Tuple[GameState, GameController]:
     # Instantiate a Player
     player = Player("Hero", life_total=20, resource_level=0)
     
-    # Load all cards from the database
-    card_data = get_all_cards()
+    # Get 5 random cards from each deck type for starting decks
+    main_card_data = get_random_cards("Main", 5)
+    resource_card_data = get_random_cards("Resource", 5)
+    encounter_card_data = get_random_cards("Encounter", 5)
     
-    # Fail-fast: Check if database is empty
-    if not card_data:
-        raise RuntimeError("Database is empty. Please run 'python seed_db.py' to initialize card data.")
+    # Fail-fast: Check if database has enough cards
+    if not main_card_data or not resource_card_data or not encounter_card_data:
+        raise RuntimeError("Database doesn't have enough cards. Please run 'python seed_db.py' to initialize card data.")
     
-    # Separate cards by deck type
-    main_cards = []
-    resource_cards = []
-    encounter_cards = []
-    
-    for name, deck_type, value, category, description in card_data:
-        card = Card(name, deck_type, value, category, description)
-        
-        if deck_type == "Main":
-            main_cards.append(card)
-        elif deck_type == "Resource":
-            resource_cards.append(card)
-        elif deck_type == "Encounter":
-            encounter_cards.append(card)
+    # Convert card data tuples to Card objects
+    main_cards = [Card(name, deck_type, value, category, description) 
+                  for name, deck_type, value, category, description in main_card_data]
+    resource_cards = [Card(name, deck_type, value, category, description) 
+                      for name, deck_type, value, category, description in resource_card_data]
+    encounter_cards = [Card(name, deck_type, value, category, description) 
+                       for name, deck_type, value, category, description in encounter_card_data]
     
     # Create three Deck instances using these cards
     main_deck = Deck(main_cards)

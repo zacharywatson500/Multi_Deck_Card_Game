@@ -3,6 +3,8 @@
 from typing import Dict, Any, List
 from .deck import Deck
 from .player import Player
+from .card import Card
+from .database_manager import get_card_by_name
 
 
 class GameState:
@@ -32,6 +34,7 @@ class GameState:
         self.is_game_over = False
         self.current_enemy_health = 10
         self.message_log: List[str] = ["Welcome to the Three-Deck System!"]
+        self.player_deck: List[Card] = []  # Player's personal deck for deck-building
     
     def __repr__(self) -> str:
         """
@@ -200,6 +203,42 @@ class GameController:
                 self.log_event(f"⚔️ Attacked with {played_card.name} for {played_card.current_value} damage! Enemy health: {self.state.current_enemy_health}")
         
         return True
+
+    def add_card_to_deck(self, card_name: str) -> bool:
+        """
+        Add a card to the player's personal deck by name.
+        
+        Args:
+            card_name (str): The name of the card to add.
+            
+        Returns:
+            bool: True if card was added successfully, False if card not found.
+        """
+        # Get card data from database
+        card_data = get_card_by_name(card_name)
+        
+        if not card_data:
+            self.log_event(f"⚠️ Card '{card_name}' not found in database!")
+            return False
+        
+        # Create Card object
+        name, deck_type, value, category, description = card_data
+        new_card = Card(name, deck_type, value, category, description)
+        
+        # Add to player's personal deck
+        self.state.player_deck.append(new_card)
+        self.log_event(f"🎴 Added '{card_name}' to your deck!")
+        
+        return True
+    
+    def get_player_deck_names(self) -> List[str]:
+        """
+        Get a list of card names currently in the player's deck.
+        
+        Returns:
+            List[str]: List of card names in the player's deck.
+        """
+        return [card.name for card in self.state.player_deck]
 
     def handle_draw_action(self) -> bool:
         """

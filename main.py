@@ -7,6 +7,7 @@ from src.player import Player
 
 from src.game_factory import setup_game
 from src.game_state import GameState, GameController
+from src.database_manager import get_random_cards
 
 
 def clear_screen() -> None:
@@ -30,6 +31,7 @@ def display_ui(state: GameState) -> None:
     print(f"  Main Deck: {len(state.decks['Main'])} cards remaining")
     print(f"  Resource Deck: {len(state.decks['Resource'])} cards remaining")
     print(f"  Encounter Deck: {len(state.decks['Encounter'])} cards remaining")
+    print(f"  Your Deck: {len(state.player_deck)} cards")
     
     # Show recent events
     print("\nRECENT EVENTS:")
@@ -56,6 +58,69 @@ def display_hand(player: Player) -> None:
     print()
 
 
+def drafting_phase(state: GameState, controller: GameController) -> None:
+    """
+    Handle the drafting phase where player can choose a card to add to their deck.
+    
+    Args:
+        state (GameState): The current game state.
+        controller (GameController): The game controller.
+    """
+    print("\n" + "=" * 50)
+    print("🎴 DRAFTING PHASE 🎴")
+    print("=" * 50)
+    
+    # Get cards already in player's deck to exclude them
+    player_deck_names = controller.get_player_deck_names()
+    
+    # Get 3 random cards from Main deck that aren't already in player's deck
+    draft_options = get_random_cards("Main", 3, player_deck_names)
+    
+    if not draft_options:
+        print("No new cards available for drafting!")
+        input("Press Enter to continue...")
+        return
+    
+    print("\nChoose a card to add to your deck:")
+    for i, (name, deck_type, value, category, description) in enumerate(draft_options):
+        print(f"  [{i+1}] {name} (Cost: {value}) - {description}")
+    print(f"  [0] Skip drafting")
+    
+    while True:
+        try:
+            choice = input("\nEnter your choice (0-3): ").strip()
+            
+            if not choice:
+                continue
+                
+            choice_num = int(choice)
+            
+            if choice_num == 0:
+                print("Skipped drafting.")
+                break
+            elif 1 <= choice_num <= 3:
+                selected_card = draft_options[choice_num - 1]
+                card_name = selected_card[0]
+                
+                if controller.add_card_to_deck(card_name):
+                    print(f"Successfully added '{card_name}' to your deck!")
+                else:
+                    print("Failed to add card to deck.")
+                break
+            else:
+                print("Invalid choice. Please enter 0, 1, 2, or 3.")
+                continue
+                
+        except ValueError:
+            print("Invalid input. Please enter a number.")
+            continue
+        except KeyboardInterrupt:
+            print("\nDrafting interrupted.")
+            break
+    
+    input("Press Enter to continue...")
+
+
 def handle_input(state: GameState, controller: GameController) -> None:
     """
     Handle user input for the game.
@@ -80,7 +145,9 @@ def handle_input(state: GameState, controller: GameController) -> None:
                 # End turn: resolve enemy encounter and start next turn
                 enemy_card = controller.resolve_enemy_turn()
                 if enemy_card:
-                    # Automatically start next turn
+                    # Drafting phase after enemy turn
+                    drafting_phase(state, controller)
+                    # Start next turn
                     controller.start_turn()
                 else:
                     print("No enemy cards remaining!")

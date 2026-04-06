@@ -2,7 +2,8 @@
 
 import sqlite3
 import os
-from typing import List, Tuple
+import random
+from typing import List, Tuple, Optional
 
 
 def initialize_database() -> None:
@@ -126,6 +127,79 @@ def get_all_cards() -> List[Tuple[str, str, int, str, str]]:
     conn.close()
     
     return cards
+
+
+def get_random_cards(deck_type: str, count: int, exclude_names: List[str] = None) -> List[Tuple[str, str, int, str, str]]:
+    """
+    Retrieve random cards from the database for a specific deck type.
+    
+    Args:
+        deck_type (str): The deck type to filter by ("Main", "Resource", "Encounter").
+        count (int): Number of random cards to retrieve.
+        exclude_names (List[str], optional): Card names to exclude from selection.
+        
+    Returns:
+        List[Tuple[str, str, int, str, str]]: List of card tuples containing
+        (name, deck_type, value, category, description)
+    """
+    # Get the path to the root directory
+    root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    db_path = os.path.join(root_dir, "game_data.db")
+    
+    # Connect to the database
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    
+    # Build the query
+    query = "SELECT name, deck_type, value, category, description FROM cards WHERE deck_type = ?"
+    params = [deck_type]
+    
+    # Add exclusion clause if provided
+    if exclude_names:
+        placeholders = ','.join(['?' for _ in exclude_names])
+        query += f" AND name NOT IN ({placeholders})"
+        params.extend(exclude_names)
+    
+    cursor.execute(query, params)
+    cards = cursor.fetchall()
+    
+    # Close the connection
+    conn.close()
+    
+    # Return random selection
+    if len(cards) <= count:
+        return cards
+    else:
+        return random.sample(cards, count)
+
+
+def get_card_by_name(card_name: str) -> Optional[Tuple[str, str, int, str, str]]:
+    """
+    Retrieve a specific card by name from the database.
+    
+    Args:
+        card_name (str): The name of the card to retrieve.
+        
+    Returns:
+        Optional[Tuple[str, str, int, str, str]]: Card tuple containing
+        (name, deck_type, value, category, description) or None if not found
+    """
+    # Get the path to the root directory
+    root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    db_path = os.path.join(root_dir, "game_data.db")
+    
+    # Connect to the database
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    
+    # Retrieve the specific card
+    cursor.execute("SELECT name, deck_type, value, category, description FROM cards WHERE name = ?", (card_name,))
+    card = cursor.fetchone()
+    
+    # Close the connection
+    conn.close()
+    
+    return card
 
 
 if __name__ == "__main__":
